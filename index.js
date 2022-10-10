@@ -33,22 +33,25 @@ function frameLoop(timeStamp) {
         const frame = gif.frames[gif._idx];
         frame.index = gif._idx;
         if (!frame.dataURL) {
-            const { width, height, imageData, left, top } = frame;
+            const maxWidth = gif.maxWidth, maxHeight = gif.maxHeight;
+            const { imageData, left, top } = frame;
             const canvas = getCanvas();
-            canvas.width = width + left;
-            canvas.height = height + top;
+            canvas.width = maxWidth;
+            canvas.height = maxHeight;
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.putImageData(imageData, left, top);
             frame.dataURL = canvas.toDataURL();
+            frame.maxWidth = maxWidth;
+            frame.maxHeight = maxHeight;
 
             const offCanvas = getOffscreenCanvas();
             if (offCanvas) {
-                offCanvas.width = width;
-                offCanvas.height = height;
+                offCanvas.width = maxWidth;
+                offCanvas.height = maxHeight;
                 const offCtx = offCanvas.getContext('2d');
                 offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
-                offCtx.putImageData(imageData, 0, 0);
+                offCtx.putImageData(imageData, left, top);
                 frame.imageBitMap = offCanvas.transferToImageBitmap();
             }
         }
@@ -63,7 +66,6 @@ function frameLoop(timeStamp) {
             }
         }
     });
-
     requestAnimationFrame(frameLoop);
 }
 setTimeout(() => {
@@ -85,6 +87,14 @@ export class GIF {
                 const parser = new Parser(arrayBuffer);
                 parser.export();
                 this.frames = parser.getFrames();
+                let maxWidth = 0, maxHeight = 0;
+                this.frames.forEach(frame => {
+                    const { width, height, left, top } = frame;
+                    maxWidth = Math.max(maxWidth, width + left);
+                    maxHeight = Math.max(maxHeight, height + top);
+                });
+                this.maxWidth = maxWidth;
+                this.maxHeight = maxHeight;
                 gifCollection.push(this);
                 this.loaded = true;
             }).catch(error => {
