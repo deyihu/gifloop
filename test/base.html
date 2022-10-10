@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>base gif</title>
+<style type="text/css">
+    html,
+    body {
+        margin: 0px;
+        padding: 50px;
+        ;
+        /* background-color: black; */
+    }
+</style>
+<script type="text/javascript" src="./../dist/gifloop.js"></script>
+
+<body>
+
+
+    <script>
+        let canvas;
+
+        function update(frame) {
+            if (!canvas) {
+                canvas = document.createElement('canvas');
+                document.body.appendChild(canvas);
+
+            }
+            // if (canvas.width !== frame.width) {
+            //     canvas.width = frame.width;
+            // }
+            // if (canvas.height !== frame.height) {
+            //     canvas.height = frame.height;
+            // }
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (frame.imageBitMap) {
+                ctx.drawImage(frame.imageBitMap, frame.left, frame.top);
+            } else {
+                ctx.putImageData(frame.imageData, frame.left, frame.top);
+            }
+        }
+        const gif = new gifloop.GIF({ loopTime: 70, url: './people.gif' });
+        gif.on('frame', function (frame) {
+            // console.log(frame);
+            update(frame);
+        })   
+    </script>
+</body>
+
+</html>
