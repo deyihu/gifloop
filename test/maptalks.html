@@ -54,28 +54,30 @@
         });
         layer.addGeometry(points);
 
-        function update(frame) {
-            points.forEach(point => {
+        function update(frame, offset = 0) {
+            points.forEach((point, index) => {
+                if (index % 3 !== offset) {
+                    return;
+                }
                 if (!point.isVisible()) {
                     point.show();
                 }
                 point.setSymbol({
                     markerFile: frame.dataURL,
-                    markerWidth: frame.width + frame.left,
-                    markerHeight: frame.height + frame.top
-                    // markerVerticalAlignment: 'top',
-                    // markerHorizontalAlignment: 'left',
-                    // markerDx: frame.left,
-                    // markerDy: frame.top
+                    markerWidth: frame.maxWidth / 2,
+                    markerHeight: frame.maxHeight / 2
                 })
             })
         }
 
-        const gif = new gifloop.GIF({ loopTime: 70, url: './people.gif' });
-        gif.on('frame', function (frame) {
-            // console.log(frame);
-            update(frame);
-        })
+        const files = ['./people.gif', 'monkey.gif', 'mouse.gif'];
+        files.forEach((file, index) => {
+            const gif = new gifloop.GIF({ loopTime: 70, url: file });
+            gif.on('frame', function (frame) {
+                // console.log(frame);
+                update(frame, index);
+            })
+        });
 
     </script>
 </body>

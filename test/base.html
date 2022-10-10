@@ -11,6 +11,10 @@
         ;
         /* background-color: black; */
     }
+
+    canvas {
+        border: 1px solid black;
+    }
 </style>
 <script type="text/javascript" src="./../dist/gifloop.js"></script>
 
@@ -35,14 +39,13 @@
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (frame.imageBitMap) {
-                ctx.drawImage(frame.imageBitMap, frame.left, frame.top);
+                ctx.drawImage(frame.imageBitMap, 0, 0);
             } else {
                 ctx.putImageData(frame.imageData, frame.left, frame.top);
             }
         }
-        const gif = new gifloop.GIF({ loopTime: 70, url: './people.gif' });
+        const gif = new gifloop.GIF({ loopTime: 70, url: './monkey.gif' });
         gif.on('frame', function (frame) {
-            // console.log(frame);
             update(frame);
         })   
     </script>
