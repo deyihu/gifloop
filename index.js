@@ -20,44 +20,46 @@ function getOffscreenCanvas() {
     return offscreenCanvas;
 }
 
+function putImageData(canvas, frame, gif) {
+    const { maxWidth, maxHeight } = gif;
+    canvas.width = maxWidth;
+    canvas.height = maxHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const { imageData, left, top } = frame;
+    ctx.putImageData(imageData, left, top);
+    frame.maxWidth = maxWidth;
+    frame.maxHeight = maxHeight;
+}
+
 const gifCollection = [];
 
 function frameLoop(timeStamp) {
     gifCollection.forEach(gif => {
-        if (!gif.loaded || !gif.frames || gif.frames.length === 0) {
+        const frames = gif.frames;
+        if (!gif.loaded || !gif._playing || !frames || frames.length === 0) {
             return;
         }
-        if (gif._idx === gif.frames.length) {
+        if (gif._idx === frames.length) {
             gif._idx = 0;
         }
-        const frame = gif.frames[gif._idx];
+        const frame = frames[gif._idx];
         frame.index = gif._idx;
         if (!frame.dataURL) {
-            const maxWidth = gif.maxWidth, maxHeight = gif.maxHeight;
-            const { imageData, left, top } = frame;
             const canvas = getCanvas();
-            canvas.width = maxWidth;
-            canvas.height = maxHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.putImageData(imageData, left, top);
+            putImageData(canvas, frame, gif);
             frame.dataURL = canvas.toDataURL();
-            frame.maxWidth = maxWidth;
-            frame.maxHeight = maxHeight;
 
             const offCanvas = getOffscreenCanvas();
             if (offCanvas) {
-                offCanvas.width = maxWidth;
-                offCanvas.height = maxHeight;
-                const offCtx = offCanvas.getContext('2d');
-                offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
-                offCtx.putImageData(imageData, left, top);
+                putImageData(offCanvas, frame, gif);
                 frame.imageBitMap = offCanvas.transferToImageBitmap();
             }
         }
         if (!gif._time) {
-            gif._mitt.emit('frame', frame);
             gif._time = timeStamp;
+            gif._idx++;
+            gif._mitt.emit('frame', frame);
         } else {
             if (timeStamp - gif._time >= gif.options.loopTime) {
                 gif._time = timeStamp;
@@ -78,6 +80,7 @@ export class GIF {
         this.options.loopTime = Math.max(17, this.options.loopTime);
         this._mitt = mitt();
         this._idx = 0;
+        this._playing = true;
         this.loaded = false;
         this.frames = [];
         if (!options.url) {
@@ -103,6 +106,11 @@ export class GIF {
         }
     }
 
+    config(options = {}) {
+        this.options = Object.assign(this.options, options);
+        return this;
+    }
+
     on(eventType, handler) {
         this._mitt.on(eventType, handler);
         return this;
@@ -113,7 +121,27 @@ export class GIF {
         return this;
     }
 
-    dispose() {
+    play() {
+        this._playing = true;
+        return this;
+    }
 
+    pause() {
+        this._playing = false;
+        return this;
+    }
+
+    isPlay() {
+        return this._playing;
+    }
+
+    dispose() {
+        const index = gifCollection.indexOf(this);
+        if (index > -1) {
+            gifCollection.splice(index, 1);
+        }
+        this._mitt.all.clear();
+        this.frames = null;
+        return this;
     }
 }
