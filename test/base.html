@@ -15,13 +15,37 @@
     canvas {
         border: 1px solid black;
     }
+
+    .tool {
+        position: absolute;
+        z-index: 1;
+        left: 0px;
+        top: 0px;
+        width: 100%;
+        border: 1px solid #e9e9e9;
+        text-align: center;
+        background-color: #f7f7f7;
+    }
+
+    #play {
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        vertical-align: middle;
+        margin-right: 20px;
+    }
 </style>
 <script type="text/javascript" src="./../dist/gifloop.js"></script>
 
 <body>
-
-
+    <div class="tool">
+        <img src="./pause.png" id="play">
+        <label for="volume">loopTime</label>
+        <input type="range" id="looptime" name="looptime" min="17" max="300" value="70">
+        <span id="looptimetip">70ms</span>
+    </div>
     <script>
+
         let canvas;
 
         function update(frame) {
@@ -44,10 +68,33 @@
                 ctx.putImageData(frame.imageData, frame.left, frame.top);
             }
         }
-        const gif = new gifloop.GIF({ loopTime: 70, url: './monkey.gif' });
+
+        const playControl = document.querySelector('#play');
+        const loopTimeControl = document.querySelector('#looptime');
+
+        function getLoopTimeValue() {
+            return parseInt(loopTimeControl.value);
+        }
+        const gif = new gifloop.GIF({ loopTime: getLoopTimeValue(), url: './people.gif' });
         gif.on('frame', function (frame) {
             update(frame);
-        })   
+        });
+
+        playControl.addEventListener('click', e => {
+            if (gif.isPlay()) {
+                gif.pause();
+                playControl.src = './play.png';
+            } else {
+                gif.play();
+                playControl.src = './pause.png';
+            }
+        });
+
+        loopTimeControl.addEventListener('change', e => {
+            const loopTime = getLoopTimeValue();
+            gif.config({ loopTime });
+            document.querySelector('#looptimetip').innerHTML = `${loopTime}ms`;
+        })
     </script>
 </body>
 

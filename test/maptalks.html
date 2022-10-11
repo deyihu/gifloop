@@ -15,19 +15,43 @@
         width: 100%;
         height: 100%
     }
+
+    .tool {
+        position: absolute;
+        z-index: 1;
+        left: 0px;
+        top: 0px;
+        width: 100%;
+        border: 1px solid #e9e9e9;
+        text-align: center;
+        background-color: #f7f7f7;
+    }
+
+    #play {
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        vertical-align: middle;
+        margin-right: 20px;
+    }
 </style>
 <link rel="stylesheet" href="https://unpkg.com/maptalks/dist/maptalks.css">
 <script type="text/javascript" src="https://unpkg.com/maptalks/dist/maptalks.min.js"></script>
 <script type="text/javascript" src="./../dist/gifloop.js"></script>
 
 <body>
-
+    <div class="tool">
+        <img src="./pause.png" id="play">
+        <label for="volume">loopTime</label>
+        <input type="range" id="looptime" name="looptime" min="17" max="300" value="70">
+        <span id="looptimetip">70ms</span>
+    </div>
     <div id="map" class="container"></div>
 
     <script>
         var map = new maptalks.Map('map', {
             center: [5, 5],
-            zoom: 6,
+            zoom: 6.5,
             baseLayer: new maptalks.TileLayer('base', {
                 urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
                 subdomains: ["a", "b", "c", "d"],
@@ -56,7 +80,7 @@
 
         function update(frame, offset = 0) {
             points.forEach((point, index) => {
-                if (index % 3 !== offset) {
+                if (index % gifs.length !== offset) {
                     return;
                 }
                 if (!point.isVisible()) {
@@ -70,14 +94,42 @@
             })
         }
 
-        const files = ['./people.gif', 'monkey.gif', 'mouse.gif'];
-        files.forEach((file, index) => {
-            const gif = new gifloop.GIF({ loopTime: 70, url: file });
+        const playControl = document.querySelector('#play');
+        const loopTimeControl = document.querySelector('#looptime');
+
+        function getLoopTimeValue() {
+            return parseInt(loopTimeControl.value);
+        }
+
+        const files = ['./people.gif', './monkey.gif', './mouse.gif', './lovely.gif'];
+        const gifs = files.map((file, index) => {
+            const gif = new gifloop.GIF({ loopTime: getLoopTimeValue(), url: file });
             gif.on('frame', function (frame) {
                 // console.log(frame);
                 update(frame, index);
-            })
+            });
+            return gif;
         });
+
+        playControl.addEventListener('click', e => {
+            gifs.forEach(gif => {
+                if (gif.isPlay()) {
+                    gif.pause();
+                    playControl.src = './play.png';
+                } else {
+                    gif.play();
+                    playControl.src = './pause.png';
+                }
+            });
+        });
+
+        loopTimeControl.addEventListener('change', e => {
+            const loopTime = getLoopTimeValue();
+            gifs.forEach(gif => {
+                gif.config({ loopTime });
+            });
+            document.querySelector('#looptimetip').innerHTML = `${loopTime}ms`;
+        })
 
     </script>
 </body>
