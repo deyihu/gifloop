@@ -3,6 +3,7 @@ import nodeResolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import json from 'rollup-plugin-json';
 import { terser } from 'rollup-plugin-terser';
+import strip from '@rollup/plugin-strip';
 import pkg from './package.json';
 const path = require('path');
 
@@ -15,7 +16,12 @@ const external = [''];
 const plugins = [
     json(),
     nodeResolve(),
-    commonjs()
+    commonjs(),
+    strip({
+        labels: ['unittest'],
+        include: '**/*.(mjs|js)',
+        functions: ['console.log']
+    })
     // babel({
     //     // exclude: ['node_modules/**']
     // })
