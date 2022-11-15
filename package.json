@@ -1,6 +1,6 @@
 {
   "name": "gifloop",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "play gif image by frame",
   "main": "dist/gifloop.js",
   "module": "./index.js",
