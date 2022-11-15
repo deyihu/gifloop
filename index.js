@@ -95,6 +95,7 @@ export class GIF {
                     const { width, height, left, top } = frame;
                     maxWidth = Math.max(maxWidth, width + left);
                     maxHeight = Math.max(maxHeight, height + top);
+                    frame.gif = this;
                 });
                 this.maxWidth = maxWidth;
                 this.maxHeight = maxHeight;
