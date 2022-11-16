@@ -1,6 +1,6 @@
 # gifloop
 
-play gif image, gif decode base on [gif-parser](https://github.com/nseeart/gif/tree/main/packages/gif-parser)
+play gif image, gif decode base on [gifuct-js](https://github.com/matt-way/gifuct-js)
 
 ## Examples
 
