@@ -1,5 +1,5 @@
 import mitt from 'mitt';
-import { Parser } from '@n.see/gif-parser';
+import { parseGIF, decompressFrames } from 'gifuct-js';
 
 let canvas, offscreenCanvas;
 function getCanvas() {
@@ -26,7 +26,8 @@ function putImageData(canvas, frame, gif) {
     canvas.height = maxHeight;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const { imageData, left, top } = frame;
+    const { patch, left, top, width, height } = frame;
+    const imageData = new ImageData(patch, width, height);
     ctx.putImageData(imageData, left, top);
     frame.maxWidth = maxWidth;
     frame.maxHeight = maxHeight;
@@ -87,15 +88,16 @@ export class GIF {
             console.error('not find gif url');
         } else {
             fetch(options.url).then(res => res.arrayBuffer()).then(arrayBuffer => {
-                const parser = new Parser(arrayBuffer);
-                parser.export();
-                this.frames = parser.getFrames();
+                const gif = parseGIF(arrayBuffer);
+                const frames = decompressFrames(gif, true);
+                this.frames = frames;
                 let maxWidth = 0, maxHeight = 0;
                 this.frames.forEach(frame => {
-                    const { width, height, left, top } = frame;
+                    const { width, height, left, top } = frame.dims;
                     maxWidth = Math.max(maxWidth, width + left);
                     maxHeight = Math.max(maxHeight, height + top);
                     frame.gif = this;
+                    frame = Object.assign(frame, frame.dims);
                 });
                 this.maxWidth = maxWidth;
                 this.maxHeight = maxHeight;
