@@ -33,6 +33,18 @@ function putImageData(canvas, frame, gif) {
     frame.maxHeight = maxHeight;
 }
 
+function initFrameDataURL(frame, gif) {
+    const canvas = getCanvas();
+    putImageData(canvas, frame, gif);
+    frame.dataURL = canvas.toDataURL();
+
+    const offCanvas = getOffscreenCanvas();
+    if (offCanvas) {
+        putImageData(offCanvas, frame, gif);
+        frame.imageBitMap = offCanvas.transferToImageBitmap();
+    }
+}
+
 const gifCollection = [];
 
 function frameLoop(timeStamp) {
@@ -47,15 +59,7 @@ function frameLoop(timeStamp) {
         const frame = frames[gif._idx];
         frame.index = gif._idx;
         if (!frame.dataURL) {
-            const canvas = getCanvas();
-            putImageData(canvas, frame, gif);
-            frame.dataURL = canvas.toDataURL();
-
-            const offCanvas = getOffscreenCanvas();
-            if (offCanvas) {
-                putImageData(offCanvas, frame, gif);
-                frame.imageBitMap = offCanvas.transferToImageBitmap();
-            }
+            initFrameDataURL(frame, gif);
         }
         if (!gif._time) {
             gif._time = timeStamp;
@@ -99,8 +103,12 @@ export class GIF {
                     frame.gif = this;
                     frame = Object.assign(frame, frame.dims);
                 });
+
                 this.maxWidth = maxWidth;
                 this.maxHeight = maxHeight;
+                this.frames.forEach(frame => {
+                    initFrameDataURL(frame, this);
+                });
                 gifCollection.push(this);
                 this.loaded = true;
             }).catch(error => {
