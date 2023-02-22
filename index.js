@@ -79,6 +79,8 @@ setTimeout(() => {
     requestAnimationFrame(frameLoop);
 }, 16);
 
+const GIFCache = {};
+
 export class GIF {
     constructor(options) {
         this.options = Object.assign({}, { loopTime: 70 }, options);
@@ -91,29 +93,40 @@ export class GIF {
         if (!options.url) {
             console.error('not find gif url');
         } else {
-            fetch(options.url).then(res => res.arrayBuffer()).then(arrayBuffer => {
-                const gif = parseGIF(arrayBuffer);
-                const frames = decompressFrames(gif, true);
-                this.frames = frames;
+
+            const init = () => {
                 let maxWidth = 0, maxHeight = 0;
                 this.frames.forEach(frame => {
                     const { width, height, left, top } = frame.dims;
                     maxWidth = Math.max(maxWidth, width + left);
                     maxHeight = Math.max(maxHeight, height + top);
                     frame.gif = this;
-                    frame = Object.assign(frame, frame.dims);
+                    Object.assign(frame, frame.dims);
                 });
-
                 this.maxWidth = maxWidth;
                 this.maxHeight = maxHeight;
-                this.frames.forEach(frame => {
-                    initFrameDataURL(frame, this);
-                });
+            };
+            if (GIFCache[options.url]) {
+                this.frames = GIFCache[options.url];
+                init();
                 gifCollection.push(this);
                 this.loaded = true;
-            }).catch(error => {
-                console.error(error);
-            });
+            } else {
+                fetch(options.url).then(res => res.arrayBuffer()).then(arrayBuffer => {
+                    const gif = parseGIF(arrayBuffer);
+                    const frames = decompressFrames(gif, true);
+                    GIFCache[options.url] = frames;
+                    this.frames = frames;
+                    init();
+                    this.frames.forEach(frame => {
+                        initFrameDataURL(frame, this);
+                    });
+                    gifCollection.push(this);
+                    this.loaded = true;
+                }).catch(error => {
+                    console.error(error);
+                });
+            }
         }
     }
 
