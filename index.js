@@ -79,7 +79,7 @@ setTimeout(() => {
     requestAnimationFrame(frameLoop);
 }, 16);
 
-const GIFCache = {};
+// const GIFCache = {};
 
 export class GIF {
     constructor(options) {
@@ -93,7 +93,6 @@ export class GIF {
         if (!options.url) {
             console.error('not find gif url');
         } else {
-
             const init = () => {
                 let maxWidth = 0, maxHeight = 0;
                 this.frames.forEach(frame => {
@@ -106,27 +105,23 @@ export class GIF {
                 this.maxWidth = maxWidth;
                 this.maxHeight = maxHeight;
             };
-            if (GIFCache[options.url]) {
-                this.frames = GIFCache[options.url];
+
+            fetch(options.url).then(res => res.arrayBuffer()).then(arrayBuffer => {
+                const gif = parseGIF(arrayBuffer);
+                const frames = decompressFrames(gif, true);
+                this.frames = frames;
                 init();
-                gifCollection.push(this);
-                this.loaded = true;
-            } else {
-                fetch(options.url).then(res => res.arrayBuffer()).then(arrayBuffer => {
-                    const gif = parseGIF(arrayBuffer);
-                    const frames = decompressFrames(gif, true);
-                    GIFCache[options.url] = frames;
-                    this.frames = frames;
-                    init();
-                    this.frames.forEach(frame => {
-                        initFrameDataURL(frame, this);
-                    });
-                    gifCollection.push(this);
-                    this.loaded = true;
-                }).catch(error => {
-                    console.error(error);
+                this.frames.forEach(frame => {
+                    initFrameDataURL(frame, this);
                 });
-            }
+                gifCollection.push(this);
+                this.emit('loaded', { target: this });
+                this.loaded = true;
+            }).catch(error => {
+                console.error(error);
+                this.emit('loadfail', { target: this });
+            });
+
         }
     }
 
