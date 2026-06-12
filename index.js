@@ -115,11 +115,11 @@ export class GIF {
                     initFrameDataURL(frame, this);
                 });
                 gifCollection.push(this);
-                this.emit('loaded', { target: this });
+                this._mitt.emit('loaded', { target: this });
                 this.loaded = true;
             }).catch(error => {
                 console.error(error);
-                this.emit('loadfail', { target: this });
+                this._mitt.emit('loadfail', { target: this });
             });
 
         }
