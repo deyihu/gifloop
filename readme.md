@@ -90,4 +90,9 @@ gif.on('frame', function(frame) {
 gif.dispose();
 ```
 
+####  events
+
+- frame
+- loaded
+- loadfail
     
